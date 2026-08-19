@@ -1,1 +1,15 @@
+.env
+node_modules/
+.npm-cache-temp/
+.vercel-cli-config/
+.vercel-test-cookies.txt
+.test-data/
+data/db.json
+data/photos/*
+!data/photos/.gitkeep
+
 .vercel
+.env*
+!.env.example
+
+.env*

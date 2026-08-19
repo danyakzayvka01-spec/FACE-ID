@@ -1,20 +1,18 @@
 {
-  "name": "link-generator",
+  "name": "cameralink",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "private": true,
+  "type": "module",
+  "main": "server.mjs",
+  "engines": {
+    "node": "24.x"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "node-telegram-bot-api": "^2.0.0",
-    "pg": "^8.23.0"
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.8.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check storage.mjs && node --check admin-client.js && node --check capture.js && node --check login.js"
   }
 }

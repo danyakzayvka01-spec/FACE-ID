@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.vercel/
+.vercel-cli-config/
+.npm-cache-temp/
+.vercel-test-cookies.txt
+.test-data/
+node_modules/
+data/
+Dockerfile
+.dockerignore
